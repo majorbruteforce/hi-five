@@ -50,6 +50,20 @@ func (g *Graph) AddEdge(from, to *Vertex, weight int) {
 	g.Edges[to][from] = &Edge{From: to, To: from, Weight: weight}
 }
 
+// EdgeCount returns the total number of directed edges in the graph.
+// Total unique undirected edge count is half of the return value.
+//
+// NOTE: len(g.Edges) gives the total number of vertices
+// and not edges due to the nature of it's implementation.
+func (g *Graph) EdgeCount() int {
+	var count int
+	for _, edges := range g.Edges {
+		count += len(edges)
+	}
+	return count
+
+}
+
 // PrintGraph prints the vertices and edges of the graph.
 // Vertices are listed first, followed by the edges with their weights.
 func (g *Graph) PrintGraph() {
