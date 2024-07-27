@@ -20,8 +20,8 @@ type Graph struct {
 	Edges    map[*Vertex]map[*Vertex]*Edge
 }
 
-// NewGraph creates and returns a new instance of Graph.
-func NewGraph() *Graph {
+// New creates and returns a new instance of Graph.
+func New() *Graph {
 	return &Graph{
 		Vertices: make([]*Vertex, 0),
 		Edges:    make(map[*Vertex]map[*Vertex]*Edge),

@@ -1,11 +1,9 @@
 package graph
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestBuild(t *testing.T) {
-	g := NewGraph()
+	g := New()
 	candidates := []*Candidate{
 		{ID: "A", Keywords: []string{"Go", "Graph"}},
 		{ID: "B", Keywords: []string{"Go", "Programming"}},
