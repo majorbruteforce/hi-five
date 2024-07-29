@@ -1,6 +1,8 @@
-package broadcaster
+package broadcast
 
-import "encoding/json"
+import (
+	"errors"
+)
 
 const (
 	// EventRequestMatch indicates a request to find a match
@@ -19,9 +21,11 @@ const (
 	EventGetOnlineCount int = 400
 )
 
-type Event struct {
-	Type    int             `json:"type`
-	Payload json.RawMessage `json:"payload"`
-}
+var (
+	ErrEventNotSupported = errors.New("this event type is not supported")
+)
 
-type EventHandler func(event Event, c *Client) error
+type Event struct {
+	Type    int    `json:"type"`
+	Payload string `json:"payload"`
+}

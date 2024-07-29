@@ -22,12 +22,14 @@ type ConnectionManager struct {
 	clients map[*Client]struct{}
 	sync.RWMutex
 	handlers map[int]EventHandler
+	sessions map[*Client]*Client
 }
 
-// NewClientManager returns a new instance of a ClientManager
+// NewConnectionManager returns a new instance of a ConnectionManager
 func NewConnetionManager() *ConnectionManager {
 	cm := &ConnectionManager{
-		clients: make(map[*Client]struct{}),
+		clients:  make(map[*Client]struct{}),
+		handlers: make(map[int]EventHandler),
 	}
 
 	cm.setupEventHandlers()
@@ -44,6 +46,7 @@ func (cm *ConnectionManager) addClient(c *Client) {
 }
 
 // removeClient removes an existing client form the clients list
+// and closes the connection
 func (cm *ConnectionManager) removeClient(c *Client) {
 	cm.Lock()
 	defer cm.Unlock()
@@ -51,6 +54,21 @@ func (cm *ConnectionManager) removeClient(c *Client) {
 	if _, ok := cm.clients[c]; ok {
 		c.connection.Close()
 		delete(cm.clients, c)
+		log.Printf("connection with %v closed", c.connection.RemoteAddr())
+	}
+}
+
+// routeEvent is used to make sure the correct event goes into the correct handler
+func (cm *ConnectionManager) routeEvent(event Event, c *Client) error {
+	// Check if Handler is present in Map
+	if handler, ok := cm.handlers[event.Type]; ok {
+		// Execute the handler and return any err
+		if err := handler(event, c); err != nil {
+			return err
+		}
+		return nil
+	} else {
+		return ErrEventNotSupported
 	}
 }
 

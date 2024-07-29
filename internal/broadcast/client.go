@@ -21,7 +21,6 @@ func NewClient(conn *websocket.Conn) *Client {
 
 func (c *Client) readMessages(cm *ConnectionManager) {
 	defer func() {
-		c.connection.Close()
 		cm.removeClient(c)
 		// remove sessions if any
 	}()
@@ -41,7 +40,13 @@ func (c *Client) readMessages(cm *ConnectionManager) {
 		}
 
 		var event Event
-		err = json.Unmarshal(data, &event)
+		if err = json.Unmarshal(data, &event); err != nil {
+			log.Printf("error unmarshaling json: %v", err)
+			continue
+		}
+		if err := cm.routeEvent(event, c); err != nil {
+			log.Printf("error routing event: %e", err)
+		}
 
 	}
 
@@ -50,8 +55,6 @@ func (c *Client) readMessages(cm *ConnectionManager) {
 // writeMessages is a process that listens for new messages to output to the Client
 func (c *Client) writeMessages(cm *ConnectionManager) {
 	defer func() {
-		// Graceful close if this triggers a closing
-		c.connection.Close()
 		cm.removeClient(c)
 		// @TODO: remove sessions if any
 	}()
