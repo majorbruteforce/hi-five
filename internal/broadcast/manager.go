@@ -1,6 +1,7 @@
 package broadcast
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"sync"
@@ -19,10 +20,10 @@ var (
 
 // ConnectionManager manages all websocket connections
 type ConnectionManager struct {
-	clients map[*Client]struct{}
-	sync.RWMutex
+	clients  map[*Client]struct{}
 	handlers map[int]EventHandler
 	sessions map[*Client]*Client
+	sync.RWMutex
 }
 
 // NewConnectionManager returns a new instance of a ConnectionManager
@@ -30,6 +31,7 @@ func NewConnetionManager() *ConnectionManager {
 	cm := &ConnectionManager{
 		clients:  make(map[*Client]struct{}),
 		handlers: make(map[int]EventHandler),
+		sessions: make(map[*Client]*Client),
 	}
 
 	cm.setupEventHandlers()
@@ -90,4 +92,38 @@ func (cm *ConnectionManager) ServeConnections(w http.ResponseWriter, r *http.Req
 	// Start the read / write processes
 	go client.readMessages(cm)
 	go client.writeMessages(cm)
+}
+
+func (cm *ConnectionManager) Debug(w http.ResponseWriter, r *http.Request) {
+	cm.RLock()
+	defer cm.RUnlock()
+
+	// Prepare the debug information
+	debugInfo := struct {
+		ClientCount  int               `json:"client_count"`
+		Clients      []*Client         `json:"clients"`
+		SessionCount int               `json:"session_count"`
+		Sessions     map[string]string `json:"sessions"`
+	}{
+		ClientCount:  len(cm.clients),
+		Clients:      make([]*Client, 0, len(cm.clients)),
+		SessionCount: len(cm.sessions),
+		Sessions:     make(map[string]string),
+	}
+
+	// Collect clients
+	for client := range cm.clients {
+		debugInfo.Clients = append(debugInfo.Clients, client)
+	}
+
+	// Collect session information
+	for client, sessionClient := range cm.sessions {
+		debugInfo.Sessions[client.ID] = sessionClient.ID
+	}
+
+	// Set response header and encode the debug information as JSON
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(debugInfo); err != nil {
+		http.Error(w, "Failed to encode debug information", http.StatusInternalServerError)
+	}
 }
