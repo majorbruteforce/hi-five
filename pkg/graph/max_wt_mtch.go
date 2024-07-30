@@ -4,8 +4,10 @@ package graph
 
 import (
 	"encoding/json"
+	"fmt"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 type Edge struct {
@@ -15,17 +17,16 @@ type Edge struct {
 }
 
 func MaxWeightedMatching(edges []Edge) ([][2]int, error) {
-	edgesJSON, err := json.Marshal(edges)
-	if err != nil {
-		return nil, err
-	}
+	edgeArg := formatEdges(edges)
 
 	scriptPath, err := filepath.Abs(filepath.Join("scripts", "max_weighted_matching.py"))
 	if err != nil {
 		return nil, err
 	}
 
-	cmd := exec.Command("python3", scriptPath, string(edgesJSON))
+	fmt.Println(edgeArg, scriptPath)
+
+	cmd := exec.Command("/usr/bin/python3", scriptPath, edgeArg)
 	output, err := cmd.Output()
 	if err != nil {
 		return nil, err
@@ -38,4 +39,17 @@ func MaxWeightedMatching(edges []Edge) ([][2]int, error) {
 	}
 
 	return result, nil
+}
+
+func formatEdges(edges []Edge) string {
+	var sb strings.Builder
+	sb.WriteString("[")
+	for i, edge := range edges {
+		if i > 0 {
+			sb.WriteString(", ")
+		}
+		sb.WriteString(fmt.Sprintf("[%d, %d, %.1f]", edge.Node1, edge.Node2, edge.Weight))
+	}
+	sb.WriteString("]")
+	return sb.String()
 }
