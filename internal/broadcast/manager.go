@@ -77,13 +77,13 @@ func (cm *ConnectionManager) routeEvent(event Event, c *Client) error {
 // ServeConnections is a HTTP handler that accepts requests to create new
 // web socket connections.
 func (cm *ConnectionManager) ServeConnections(w http.ResponseWriter, r *http.Request) {
-	log.Println("New connection")
 	// Begin by upgrading the HTTP request
 	conn, err := websocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
+	log.Printf("%s connected\n", conn.RemoteAddr())
 
 	// Create New Client
 	client := NewClient(conn)
