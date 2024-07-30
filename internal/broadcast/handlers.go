@@ -18,4 +18,16 @@ func (cm *ConnectionManager) setupEventHandlers() {
 		}
 		return nil
 	}
+
+	cm.handlers[EventReqMatch] = func(e Event, c *Client) error {
+		// m := matchmaker.NewManager()
+		// m.Ingress <- Candidate{ID: c.Id, Keywords: e.Payload}
+
+		return nil
+	}
+
+	cm.handlers[EventReqSessionEnd] = func(event Event, c *Client) error {
+		cm.removeSession(c)
+		return nil
+	}
 }

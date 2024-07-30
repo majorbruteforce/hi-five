@@ -34,7 +34,7 @@ func TestMatchCandidatesBatch(t *testing.T) {
 		{"candidate-4", "candidate-2"},
 	}
 
-	result := matchCandidatesBatch(candidates)
+	result := MatchCandidatesBatch(candidates)
 
 	if !reflect.DeepEqual(expected, result) {
 		t.Errorf("expected: %v\n got: %v\n", expected, result)

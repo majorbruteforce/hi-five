@@ -1,6 +1,7 @@
 package broadcast
 
 import (
+	"fmt"
 	"log"
 )
 
@@ -55,7 +56,7 @@ func (cm *ConnectionManager) removeSession(c *Client) {
 	delete(cm.sessions, oc)
 
 	oc.egress <- Event{
-		Type:    EventEndSession,
+		Type:    EventSessionEnded,
 		Payload: c.connection.RemoteAddr().String(),
 	}
 }
@@ -72,4 +73,21 @@ func (cm *ConnectionManager) CreateRandomSession() {
 	}
 
 	cm.createSession(clients[0], clients[1])
+}
+
+func (cm *ConnectionManager) CreateBatchSessions(in <-chan [][2]string) {
+	clientIDMap := make(map[string]*Client)
+	for c := range cm.clients {
+		clientIDMap[c.ID] = c
+	}
+	for {
+		matches, ok := <-in
+		if !ok {
+			fmt.Printf("session ingress channel is closed and drained")
+			return
+		}
+		for _, m := range matches {
+			cm.createSession(clientIDMap[m[0]], clientIDMap[m[1]])
+		}
+	}
 }

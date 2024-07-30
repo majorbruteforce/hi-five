@@ -24,8 +24,6 @@ func MaxWeightedMatching(edges []Edge) ([][2]int, error) {
 		return nil, err
 	}
 
-	fmt.Println(edgeArg, scriptPath)
-
 	cmd := exec.Command("/usr/bin/python3", scriptPath, edgeArg)
 	output, err := cmd.Output()
 	if err != nil {
