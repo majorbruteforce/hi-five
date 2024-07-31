@@ -12,16 +12,18 @@ import (
 )
 
 type Client struct {
-	ID         string
-	connection *websocket.Conn
-	egress     chan Event
+	ID          string
+	DisplayName string
+	connection  *websocket.Conn
+	egress      chan Event
 }
 
-func NewClient(conn *websocket.Conn) *Client {
+func NewClient(conn *websocket.Conn, displayName string) *Client {
 	return &Client{
-		ID:         uuid.New().String(),
-		connection: conn,
-		egress:     make(chan Event),
+		ID:          uuid.New().String(),
+		DisplayName: displayName,
+		connection:  conn,
+		egress:      make(chan Event),
 	}
 }
 

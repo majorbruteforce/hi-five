@@ -86,9 +86,13 @@ func (cm *ConnectionManager) ServeConnections(w http.ResponseWriter, r *http.Req
 		return
 	}
 	log.Printf("%s connected\n", conn.RemoteAddr())
+	displayName := r.URL.Query().Get("displayName")
+	if displayName == "" {
+		displayName = "anonymous"
+	}
 
 	// Create New Client
-	client := NewClient(conn)
+	client := NewClient(conn, displayName)
 	// Add the newly created client to the manager
 	cm.addClient(client)
 	// Start the read / write processes
