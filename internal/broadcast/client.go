@@ -27,6 +27,10 @@ func NewClient(conn *websocket.Conn, displayName string) *Client {
 	}
 }
 
+// readMessages constantly reads for incoming events from the connection.
+// and routes them through routeEvent.
+//
+// It will only route the messages that are of event type client to server (< 200)
 func (c *Client) readMessages(cm *ConnectionManager) {
 	defer func() {
 		cm.removeClient(c)
@@ -56,6 +60,11 @@ func (c *Client) readMessages(cm *ConnectionManager) {
 			continue
 		}
 
+		// Check if event in client to server
+		if event.Type > 199 {
+			continue
+		}
+
 		parsedPayload, err := parsePayload(event)
 		if err != nil {
 			fmt.Println(err)
@@ -75,7 +84,9 @@ func (c *Client) readMessages(cm *ConnectionManager) {
 
 }
 
-// writeMessages is a process that listens for new messages to output to the Client
+// writeMessages is a process that listens for new messages to output to the Client.
+//
+// It will only send the client messages that are of event type server to client (>= 200)
 func (c *Client) writeMessages(cm *ConnectionManager) {
 	defer func() {
 
@@ -99,6 +110,12 @@ func (c *Client) writeMessages(cm *ConnectionManager) {
 			// Return to close the goroutine
 			return
 		}
+
+		// Check if event if server to client
+		if message.Type < 200 {
+			continue
+		}
+
 		// Write a Regular text message to the connection
 		data, _ := json.Marshal(message)
 		if err := c.connection.WriteMessage(websocket.TextMessage, data); err != nil {

@@ -27,12 +27,12 @@ func (cm *ConnectionManager) createSession(c1, c2 *Client) {
 
 	c1.egress <- Event{
 		Type:    EventNewSession,
-		Payload: c2.connection.RemoteAddr().String(),
+		Payload: c2.DisplayName,
 	}
 
 	c2.egress <- Event{
 		Type:    EventNewSession,
-		Payload: c1.connection.RemoteAddr().String(),
+		Payload: c1.DisplayName,
 	}
 
 }

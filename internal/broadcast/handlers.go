@@ -25,6 +25,10 @@ func (cm *ConnectionManager) setupEventHandlers(m *matchmaker.MatchManager) {
 
 	cm.handlers[EventReqMatch] = func(e Event, c *Client) error {
 		m.Ingress <- matchmaker.Candidate{ID: c.ID, Keywords: e.Payload.([]string)}
+		c.egress <- Event{
+			Type:    EventMatchmakingInProgress,
+			Payload: "",
+		}
 		return nil
 	}
 
