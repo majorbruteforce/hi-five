@@ -8,7 +8,7 @@ type Edge = graph.Edge
 // Each candidate is added as a vertex, and edges are added between vertices
 // based on the number of common keywords. The weight of each edge is the count
 // of common keywords between the connected candidates.
-func Build(candidateList []*Candidate) []Edge {
+func Build(candidateList []Candidate) []Edge {
 
 	// edges stores the matched edges of the graph
 	var edges []Edge

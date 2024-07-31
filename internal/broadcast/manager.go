@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
+	"github.com/majorbruteforce/hi-five/internal/matchmaker"
 )
 
 var (
@@ -27,14 +28,15 @@ type ConnectionManager struct {
 }
 
 // NewConnectionManager returns a new instance of a ConnectionManager
-func NewConnetionManager() *ConnectionManager {
+func NewConnetionManager(m *matchmaker.MatchManager) *ConnectionManager {
 	cm := &ConnectionManager{
 		clients:  make(map[*Client]struct{}),
 		handlers: make(map[int]EventHandler),
 		sessions: make(map[*Client]*Client),
 	}
 
-	cm.setupEventHandlers()
+	cm.setupEventHandlers(m)
+	go cm.CreateBatchSessions(m.Egress)
 	return cm
 
 }

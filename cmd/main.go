@@ -5,10 +5,19 @@ import (
 	"net/http"
 
 	"github.com/majorbruteforce/hi-five/internal/broadcast"
+	"github.com/majorbruteforce/hi-five/internal/matchmaker"
 )
 
 func main() {
-	cm := broadcast.NewConnetionManager()
+
+	matchConfig := matchmaker.Config{
+		TargetBufferSize: 4,
+		Strategy:         matchmaker.StrategySize,
+	}
+
+	mm := matchmaker.NewManager(matchConfig)
+	cm := broadcast.NewConnetionManager(mm)
+
 	http.HandleFunc("/ws", cm.ServeConnections)
 	http.HandleFunc("/debug", cm.Debug)
 

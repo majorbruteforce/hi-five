@@ -76,12 +76,12 @@ func (cm *ConnectionManager) CreateRandomSession() {
 }
 
 func (cm *ConnectionManager) CreateBatchSessions(in <-chan [][2]string) {
-	clientIDMap := make(map[string]*Client)
-	for c := range cm.clients {
-		clientIDMap[c.ID] = c
-	}
 	for {
 		matches, ok := <-in
+		clientIDMap := make(map[string]*Client)
+		for c := range cm.clients {
+			clientIDMap[c.ID] = c
+		}
 		if !ok {
 			fmt.Printf("session ingress channel is closed and drained")
 			return

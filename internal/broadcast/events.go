@@ -28,6 +28,6 @@ var (
 )
 
 type Event struct {
-	Type    int    `json:"type"`
-	Payload string `json:"payload"`
+	Type    int         `json:"type"`
+	Payload interface{} `json:"payload"`
 }

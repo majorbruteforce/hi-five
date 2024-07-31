@@ -6,7 +6,7 @@ import (
 	"github.com/majorbruteforce/hi-five/pkg/graph"
 )
 
-func MatchCandidatesBatch(candidates []*Candidate) [][2]string {
+func MatchCandidatesBatch(candidates []Candidate) [][2]string {
 	matches := make([][2]string, 0)
 
 	edges := Build(candidates)
@@ -18,7 +18,7 @@ func MatchCandidatesBatch(candidates []*Candidate) [][2]string {
 	}
 	fmt.Println(results)
 	for _, r := range results {
-		match := [2]string{candidates[r[0]].ID, candidates[r[1]].ID}
+		match := [2]string{candidates[r[0]-1].ID, candidates[r[1]-1].ID}
 		matches = append(matches, match)
 	}
 	return matches

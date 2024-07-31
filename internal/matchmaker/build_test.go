@@ -6,7 +6,7 @@ import (
 )
 
 func TestBuild(t *testing.T) {
-	candidates := []*Candidate{
+	candidates := []Candidate{
 		{
 			ID:       "candidate-1",
 			Keywords: []string{"golang", "python", "java", "javascript", "c++"},
