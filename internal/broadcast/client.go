@@ -12,18 +12,28 @@ import (
 )
 
 type Client struct {
-	ID          string
-	DisplayName string
-	connection  *websocket.Conn
-	egress      chan Event
+	ID         string
+	Profile    Profile
+	connection *websocket.Conn
+	egress     chan Event
 }
 
-func NewClient(conn *websocket.Conn, displayName string) *Client {
+type Profile struct {
+	DisplayName string `json:"displayName"`
+	Age         int    `json:"age"`
+	Sex         string `json:"sex"`
+}
+
+func NewClient(conn *websocket.Conn, profile Profile) *Client {
 	return &Client{
-		ID:          uuid.New().String(),
-		DisplayName: displayName,
-		connection:  conn,
-		egress:      make(chan Event),
+		ID: uuid.New().String(),
+		Profile: Profile{
+			DisplayName: profile.DisplayName,
+			Age:         profile.Age,
+			Sex:         profile.Sex,
+		},
+		connection: conn,
+		egress:     make(chan Event),
 	}
 }
 
@@ -60,7 +70,7 @@ func (c *Client) readMessages(cm *ConnectionManager) {
 			continue
 		}
 
-		// Check if event in client to server
+		// Check if event is client to server
 		if event.Type > 199 {
 			continue
 		}
@@ -111,7 +121,7 @@ func (c *Client) writeMessages(cm *ConnectionManager) {
 			return
 		}
 
-		// Check if event if server to client
+		// Check if event is server to client
 		if message.Type < 200 {
 			continue
 		}
@@ -128,7 +138,7 @@ func (c *Client) writeMessages(cm *ConnectionManager) {
 
 func parsePayload(event Event) (interface{}, error) {
 	switch event.Type {
-	case EventSendMessage:
+	case EventReqSendMessage:
 		payload, ok := event.Payload.(string)
 		if !ok {
 			return nil, fmt.Errorf("parsePaload: %v is of type %v not string", event.Payload, reflect.TypeOf(event.Payload))
@@ -149,6 +159,12 @@ func parsePayload(event Event) (interface{}, error) {
 		}
 		return payloadString, nil
 	case EventReqSessionEnd:
+		payload, ok := event.Payload.(struct{})
+		if !ok {
+			return nil, fmt.Errorf("parsePaload: %v is of type %v not struct", event.Payload, reflect.TypeOf(event.Payload))
+		}
+		return payload, nil
+	case EventReqClientsStatus:
 		payload, ok := event.Payload.(struct{})
 		if !ok {
 			return nil, fmt.Errorf("parsePaload: %v is of type %v not struct", event.Payload, reflect.TypeOf(event.Payload))

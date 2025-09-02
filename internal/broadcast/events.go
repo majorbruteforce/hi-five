@@ -15,27 +15,38 @@ import (
 // The final digit must represent the type of specific event.
 
 const (
-	//EventGetOnlineCount requests count of online clients.
+	// EventReqClientsStatus requests count of online clients.
 	// client to server, server
-	EventGetOnlineCount int = 100
-	// EventRequestMatch indicates a request to find a match.
+	EventReqClientsStatus int = 100
+
+	// EventReqMatch indicates a request to find a match.
 	// client to server, session
 	EventReqMatch int = 110
+
 	// EventReqSessionEnd indicates a request to end current session gracefully.
 	// client to server, session
 	EventReqSessionEnd int = 111
-	// EventSendMessage indicates an message to be directed to the reciever.
+
+	// EventReqSendMessage indicates an message to be directed to the reciever.
 	// client to server, session
-	EventMatchmakingInProgress int = 112
-	// EventMatchmakingInProgress indicates a request to find a match.
+	EventReqSendMessage int = 112
+
+	// EventClientsStatus responds with number of online and matched clients
+	// server to client, server
+	EventClientsStatus int = 200
+
+	// EventSessionEnded indicates that the current session was ended.
 	// server to client, session
 	EventSessionEnded int = 210
+
 	// EventNewSession indicates a successful session creation.
 	// server to client, session
 	EventNewSession int = 211
-	// EventSessionEnded indicates that the current session was ended.
+
+	// EventMatchmakingInProgress indicates a request to find a match.
 	// server to client, session
-	EventSendMessage int = 212
+	EventMatchmakingInProgress int = 212
+
 	// EventNewMessage indicates an incoming message from the server to the client.
 	// server to client, session
 	EventNewMessage int = 213

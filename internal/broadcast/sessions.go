@@ -27,12 +27,12 @@ func (cm *ConnectionManager) createSession(c1, c2 *Client) {
 
 	c1.egress <- Event{
 		Type:    EventNewSession,
-		Payload: c2.DisplayName,
+		Payload: c2.Profile,
 	}
 
 	c2.egress <- Event{
 		Type:    EventNewSession,
-		Payload: c1.DisplayName,
+		Payload: c1.Profile,
 	}
 
 }
@@ -57,7 +57,7 @@ func (cm *ConnectionManager) removeSession(c *Client) {
 
 	oc.egress <- Event{
 		Type:    EventSessionEnded,
-		Payload: c.connection.RemoteAddr().String(),
+		Payload: struct{}{},
 	}
 }
 

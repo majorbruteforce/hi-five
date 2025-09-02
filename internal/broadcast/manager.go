@@ -2,8 +2,10 @@ package broadcast
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -35,7 +37,7 @@ func NewConnetionManager(m *matchmaker.MatchManager) *ConnectionManager {
 		sessions: make(map[*Client]*Client),
 	}
 
-	cm.setupEventHandlers(m)
+	cm.setupEventHandlers(m.Ingress)
 	go cm.CreateBatchSessions(m.Egress)
 	return cm
 
@@ -76,23 +78,44 @@ func (cm *ConnectionManager) routeEvent(event Event, c *Client) error {
 	}
 }
 
+func ProfileHandler(w http.ResponseWriter, r *http.Request) {
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Unable to read request body", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	var data Profile
+
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		http.Error(w, "Invalid JSON format of request body", http.StatusBadRequest)
+		return
+	}
+
+	clientProfile := Profile{
+		DisplayName: data.DisplayName,
+		Age:         data.Age,
+		Sex:         data.Sex,
+	}
+}
+
 // ServeConnections is a HTTP handler that accepts requests to create new
 // web socket connections.
 func (cm *ConnectionManager) ServeConnections(w http.ResponseWriter, r *http.Request) {
 	// Begin by upgrading the HTTP request
+
 	conn, err := websocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	log.Printf("%s connected\n", conn.RemoteAddr())
-	displayName := r.URL.Query().Get("displayName")
-	if displayName == "" {
-		displayName = "anonymous"
-	}
 
 	// Create New Client
-	client := NewClient(conn, displayName)
+	client := NewClient(conn, clientProfile)
 	// Add the newly created client to the manager
 	cm.addClient(client)
 	// Start the read / write processes
@@ -103,6 +126,13 @@ func (cm *ConnectionManager) ServeConnections(w http.ResponseWriter, r *http.Req
 func (cm *ConnectionManager) Debug(w http.ResponseWriter, r *http.Request) {
 	cm.RLock()
 	defer cm.RUnlock()
+
+	token := r.URL.Query().Get("debugToken")
+
+	if token != os.Getenv("DEV_TOKEN") {
+		http.Error(w, "Invalid dev token", http.StatusUnauthorized)
+		return
+	}
 
 	// Prepare the debug information
 	debugInfo := struct {

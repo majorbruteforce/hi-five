@@ -10,6 +10,8 @@ import (
 
 func main() {
 
+	// r := mux.NewRouter()
+
 	matchConfig := matchmaker.Config{
 		TargetBufferSize: 4,
 		Strategy:         matchmaker.StrategySize,
