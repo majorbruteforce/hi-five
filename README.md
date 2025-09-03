@@ -1,25 +1,83 @@
-# hi-five
+# User Interaction
 
-A chat application that matchs based on common interests
+- [ ] **Accept Requests**
 
-## Data Flow
+  - [ ] Accept matching requests based on **labels, words, and semantics**
+  - [ ] Create a **vertex for the user** to send to the matching engine
 
-![Diagram](./data-flow.png)
+- [ ] **Socket Management**
 
-## Broadcast
+  - [ ] Track active WebSocket sessions for matched users
+  - [ ] Send match notifications to connected users once a match is confirmed
+  - [ ] Auto heal lost connections, retries
 
-Facilitates flow of events between clients and the server
+---
 
- - readMessages: listens to incoming messages from the client and sends them to routeEvent to assign the event to a handler
- - writeMessages: sends a message to a particular client upon recieving an event in that client's egress channel
- - parsePayload: parses the incoming payloads by asserting a type based on the event type
- - setupEventHandlers: configures all event handlers when a new Connection Manager is created
- - addClient: adds a client to the Client set of the Connection Manager
- - removeClient: removes a client for the Client set
- - routeEvent: routes event to appropraite handler
- - ServerConnections: http handler that creates a new socket connection and starts readMessages, writeMessages
- - Debug: http handler to query Connection manager status during development
+# Matching Engine Features
 
+- [ ] **Blossom V Integration**
 
+  - [ ] Expose Blossom V via **C++ binding (cgo)**
+  - [ ] Define Go wrapper functions (`AddEdge`, `ComputeMatching`, `GetMatching`)
 
+- [ ] **Graph Sharding**
 
+  - [ ] Partition graph into **shards for locality**
+  - [ ] Support **local fast online mode** with `limitedAugmentSearch`
+
+- [ ] **Global Mode**
+
+  - [ ] Trigger **full global recomputation** of matching across shards when needed
+
+- [ ] **Data Ingestion**
+
+  - [ ] Stream edges via **Go channels**
+  - [ ] Maintain **in-memory buffer / graph state per shard**
+
+- [ ] **Matching Parameters**
+
+  - [ ] `MAX_DEPTH` — limit augment path exploration
+  - [ ] `SIMPLE_THRESHOLD` — early-exit rule for quick matches
+  - [ ] `GAIN_THRESHOLD` — filter matches based on incremental gain
+
+---
+
+# Future Scope
+
+- [ ] **Edge Prioritization**
+
+  - [ ] Weighted queues to handle high-priority edges first
+
+- [ ] **Asynchronous Global Sync**
+
+  - [ ] Background global recomputation without blocking local shard queries
+
+- [ ] **Horizontal Scaling**
+
+  - [ ] Multi-process shard workers with gRPC for inter-shard sync
+  - [ ] Explore using **Raft/consensus** for distributed state if scaling across nodes
+
+- [ ] **Dynamic Sharding**
+
+  - [ ] Rebalance shards when edge distribution is skewed
+
+- [ ] **Monitoring & Metrics**
+
+  - [ ] Latency, throughput, and matching success rate dashboards
+  - [ ] Prometheus metrics + Grafana visualization
+
+- [ ] **Optimized Blossom**
+
+  - [ ] Replace cgo wrapper with direct Go port if performance demands
+  - [ ] Explore approximate/heuristic algorithms for ultra-low-latency paths
+
+- [ ] **Persistence Layer**
+
+  - [ ] Snapshot graph state periodically (SQLite / BadgerDB)
+  - [ ] Recovery support after crash
+
+- [ ] **Chat/Session Enhancements**
+
+  - [ ] Match history persistence for users
+  - [ ] Load balancing WebSocket servers for chat sessions
+  - [ ] Chat session handoff for scaling beyond single server
