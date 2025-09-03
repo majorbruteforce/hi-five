@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/majorbruteforce/hi-five/internal/config"
-	log "github.com/majorbruteforce/hi-five/pkg/logger"
+	"github.com/majorbruteforce/hifive/internal/config"
+	log "github.com/majorbruteforce/hifive/pkg/logger"
 )
 
 func main() {

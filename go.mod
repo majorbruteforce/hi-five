@@ -1,4 +1,4 @@
-module github.com/majorbruteforce/hi-five
+module github.com/majorbruteforce/hifive
 
 go 1.22.6
 

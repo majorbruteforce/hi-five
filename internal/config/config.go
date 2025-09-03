@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	log "github.com/majorbruteforce/hi-five/pkg/logger"
+	log "github.com/majorbruteforce/hifive/pkg/logger"
 )
 
 type Config struct {
