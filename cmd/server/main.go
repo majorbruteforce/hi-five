@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/majorbruteforce/hifive/internal/config"
 	"github.com/majorbruteforce/hifive/internal/sockets"
@@ -16,15 +18,17 @@ func main() {
 
 	sm := sockets.NewSocketManager(cfg)
 	go sm.Run()
+	sm.RegisterWSHandler()
 
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		userID := r.URL.Query().Get("userID")
-		if userID == "" {
-			http.Error(w, "missing userID", http.StatusBadRequest)
-			return
+	go func(sm *sockets.SocketManager) {
+		ticker := time.NewTicker(5 * time.Second)
+		for t := range ticker.C {
+			sm.Broadcast(fmt.Appendf(nil, "Broadcast @ %s", t.Format(time.Kitchen)))
 		}
-		sm.HandleWS(w, r, userID)
-	})
 
-	http.ListenAndServe(":4018", nil)
+		defer ticker.Stop()
+	}(sm)
+
+	log.Log.Infoln("Starting server on", cfg.Port)
+	http.ListenAndServe(cfg.Port, nil)
 }
