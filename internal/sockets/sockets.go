@@ -1,10 +1,8 @@
 package sockets
 
 import (
-	"fmt"
 	"net/http"
 	"sync"
-	"time"
 
 	"github.com/gorilla/websocket"
 
@@ -47,30 +45,13 @@ func (sm *SocketManager) Run() {
 	for {
 		select {
 		case client := <-sm.register:
-			sm.mu.Lock()
-			sm.clients[client.UserId] = client
-			sm.mu.Unlock()
-			go client.writePump()
-			go client.readPump(sm)
+			sm.handleRegistration(client)
 
 		case client := <-sm.unregister:
-			sm.mu.Lock()
-			if _, ok := sm.clients[client.UserId]; ok {
-				delete(sm.clients, client.UserId)
-				close(client.Send)
-				client.Conn.Close()
-			}
-			sm.mu.Unlock()
+			sm.handleUnregistration(client)
 
 		case msg := <-sm.broadcast:
-			sm.mu.RLock()
-			for _, client := range sm.clients {
-				select {
-				case client.Send <- msg:
-				default:
-				}
-			}
-			sm.mu.RUnlock()
+			sm.handleBroadcast(msg)
 		}
 	}
 }
@@ -78,7 +59,7 @@ func (sm *SocketManager) Run() {
 func (sm *SocketManager) HandleWS(w http.ResponseWriter, r *http.Request, userID string) {
 	conn, err := sm.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Error("upgrade:", err)
+		log.Error(err)
 		return
 	}
 
@@ -90,67 +71,49 @@ func (sm *SocketManager) HandleWS(w http.ResponseWriter, r *http.Request, userID
 	sm.register <- client
 }
 
-func (sm *SocketManager) SendTo(userID string, msg []byte) {
+func (sm *SocketManager) handleRegistration(c *Client) {
+	sm.mu.Lock()
+	sm.clients[c.UserId] = c
+	sm.mu.Unlock()
+	go c.writePump()
+	go c.readPump(sm)
+
+	log.Log.Infof("Client(id=%s) registered", c.UserId)
+}
+
+func (sm *SocketManager) handleUnregistration(c *Client) {
+	sm.mu.Lock()
+	if _, ok := sm.clients[c.UserId]; ok {
+		delete(sm.clients, c.UserId)
+		close(c.Send)
+		c.Conn.Close()
+	}
+	sm.mu.Unlock()
+
+	log.Log.Infof("Client(id=%s) unregistered", c.UserId)
+}
+
+func (sm *SocketManager) handleBroadcast(msg []byte) {
 	sm.mu.RLock()
-	defer sm.mu.RUnlock()
-	if client, ok := sm.clients[userID]; ok {
+	for _, client := range sm.clients {
 		select {
 		case client.Send <- msg:
+
 		default:
 		}
 	}
+	sm.mu.RUnlock()
+
+	log.Log.Infof("Broadcast message sent")
 }
 
-func (sm *SocketManager) Broadcast(msg []byte) {
-	sm.broadcast <- msg
-}
-
-func (c *Client) readPump(sm *SocketManager) {
-	defer func() {
-		sm.unregister <- c
-	}()
-
-	c.Conn.SetReadLimit(512)
-	c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
-	c.Conn.SetPongHandler(func(string) error {
-		c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
-		return nil
+func (sm *SocketManager) RegisterWSHandler() {
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		userID := r.URL.Query().Get("userID")
+		if userID == "" {
+			http.Error(w, "missing userID", http.StatusBadRequest)
+			return
+		}
+		sm.HandleWS(w, r, userID)
 	})
-
-	for {
-		_, msg, err := c.Conn.ReadMessage()
-		if err != nil {
-			break
-		}
-
-		fmt.Printf("%s", msg)
-	}
-}
-
-func (c *Client) writePump() {
-	ticker := time.NewTicker(30 * time.Second)
-	defer func() {
-		ticker.Stop()
-		c.Conn.Close()
-	}()
-
-	for {
-		select {
-		case msg, ok := <-c.Send:
-			c.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-			if !ok {
-				c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
-			if err := c.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-				return
-			}
-
-		case <-ticker.C:
-			c.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				return
-			}
-		}
-	}
 }

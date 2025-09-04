@@ -1,15 +1,24 @@
 # User Interaction
 
+- [ ] **Socket Management**
+
+  - [x] Register, Unregister connections
+  - [ ] Heartbeat, Auto heal lost connections
+  - [ ] Track active WebSocket sessions for matched users
+  - [ ] Setup event handlers
+
 - [ ] **Accept Requests**
 
   - [ ] Accept matching requests based on **labels, words, and semantics**
   - [ ] Create a **vertex for the user** to send to the matching engine
 
-- [ ] **Socket Management**
+---
 
-  - [ ] Track active WebSocket sessions for matched users
-  - [ ] Send match notifications to connected users once a match is confirmed
-  - [ ] Auto heal lost connections, retries
+# Deployment
+
+- [ ] Dockerise
+- [ ] Setup GCP Cloud Run
+- [ ] Write a workflow to trigger CI/CD on v1 
 
 ---
 

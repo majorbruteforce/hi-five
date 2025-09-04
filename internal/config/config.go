@@ -9,14 +9,16 @@ import (
 )
 
 type Config struct {
-	Env string
+	Env  string
+	Port string
 }
 
 func Load() Config {
 	_ = godotenv.Load()
 
 	return Config{
-		Env: getEnv("ENV", "development"),
+		Env:  getEnv("ENV", "development"),
+		Port: getEnv("PORT", ":8080"),
 	}
 }
 
