@@ -7,19 +7,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func (sm *SocketManager) SendTo(userID string, msg []byte) {
-	sm.mu.RLock()
-	defer sm.mu.RUnlock()
-	if client, ok := sm.clients[userID]; ok {
-		select {
-		case client.Send <- msg:
-		default:
-		}
-	}
-}
-
-func (sm *SocketManager) Broadcast(msg []byte) {
-	sm.broadcast <- msg
+type Client struct {
+	UserId string
+	Conn   *websocket.Conn
+	Send   chan []byte
 }
 
 func (c *Client) readPump(sm *SocketManager) {
@@ -69,5 +60,14 @@ func (c *Client) writePump() {
 				return
 			}
 		}
+	}
+}
+
+func (c *Client) SendMsg(msg []byte) error {
+	select {
+	case c.Send <- msg:
+		return nil
+	default:
+		return fmt.Errorf("client %s send buffer full", c.UserId)
 	}
 }

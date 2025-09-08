@@ -10,14 +10,10 @@ import (
 	log "github.com/majorbruteforce/hifive/pkg/logger"
 )
 
-type Client struct {
-	UserId string
-	Conn   *websocket.Conn
-	Send   chan []byte
-}
-
 type SocketManager struct {
 	clients    map[string]*Client
+	handlers   map[int]EventHandler
+	sessions   map[*Client]*Client
 	mu         sync.RWMutex
 	upgrader   websocket.Upgrader
 	register   chan *Client
@@ -27,8 +23,10 @@ type SocketManager struct {
 }
 
 func NewSocketManager(cfg config.Config) *SocketManager {
-	return &SocketManager{
-		clients: make(map[string]*Client),
+	sm := &SocketManager{
+		clients:  make(map[string]*Client),
+		handlers: make(map[int]EventHandler),
+		sessions: make(map[*Client]*Client),
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
@@ -39,6 +37,9 @@ func NewSocketManager(cfg config.Config) *SocketManager {
 		broadcast:  make(chan []byte),
 		cfg:        cfg,
 	}
+
+	sm.setupEventHandlers()
+	return sm
 }
 
 func (sm *SocketManager) Run() {
@@ -116,4 +117,19 @@ func (sm *SocketManager) RegisterWSHandler() {
 		}
 		sm.HandleWS(w, r, userID)
 	})
+}
+
+func (sm *SocketManager) SendTo(userID string, msg []byte) {
+	sm.mu.RLock()
+	defer sm.mu.RUnlock()
+	if client, ok := sm.clients[userID]; ok {
+		select {
+		case client.Send <- msg:
+		default:
+		}
+	}
+}
+
+func (sm *SocketManager) Broadcast(msg []byte) {
+	sm.broadcast <- msg
 }
