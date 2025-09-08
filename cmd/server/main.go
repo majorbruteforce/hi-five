@@ -19,5 +19,5 @@ func main() {
 	sm.RegisterWSHandler()
 
 	log.Log.Infoln("Starting server on", cfg.Port)
-	http.ListenAndServe(cfg.Port, nil)
+	http.ListenAndServe(":"+cfg.Port, nil)
 }
