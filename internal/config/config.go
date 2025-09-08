@@ -18,7 +18,7 @@ func Load() Config {
 
 	return Config{
 		Env:  getEnv("ENV", "development"),
-		Port: getEnv("PORT", ":8080"),
+		Port: getEnv("PORT", "8080"),
 	}
 }
 
